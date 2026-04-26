@@ -15,11 +15,11 @@ This repository contains the data, analysis scripts, and write-up for a study on
 * Five participants (N = 5) completed a ten-minute conversation with the Furhat robot.
 * Gaze was recorded with Tobii Pro Glasses 3, a head-mounted eye tracker sampling at approximately 50 Hz.
 * The robot was driven by a custom Furhat skill with a Gemini LLM backend ([dara-nn/Furhat-eye-tracking](https://github.com/dara-nn/Furhat-eye-tracking)).
-* Gaze samples are tagged with one of six Areas of Interest (Face, Eyes, Mouth, Nose, Body, Outside) and collapsed into a binary *on-robot* / *away* label.
+* Each gaze sample carries a recording timestamp, Tobii's eye-movement classification (Fixation / Saccade / EyesNotFound / Unclassified) with its duration, the six AOI hits (Face, Eyes, Mouth, Nose, Body, Outside), the snapshot-mapped (x, y) gaze coordinates, and the filtered pupil diameter.
 
 ## Methodology Pipeline
-1. **Pre-processing.** Map each gaze sample from the eye-tracker recording onto the scene-camera snapshot, hit-test against the drawn AOIs, and collapse the six AOIs into the aggregated *on-robot* / *away* variable.
-2. **Turn events.** Extract turn-start and turn-end timestamps from the anonymized transcript and merge them into the gaze file.
+1. **Pre-processing.** From the per-sample TSV exported by Tobii Pro Lab (with the six AOI columns Face, Eyes, Mouth, Nose, Body, Outside), assign each sample an aggregated AOI: *on-robot* if Face, *away* if Body or Outside but not Face. Samples with no AOI hit are dropped as invalid.
+2. **Turn events.** Turn-start and turn-end events were extracted from the ElevenLabs transcripts with AI assistance and manual review, and stored in `data/turn_events.csv`. The pre-processing collapses consecutive same-speaker events into full speaker turns.
 3. **RQ1, look-away / look-back.** For each turn, scan a ±1 s window around turn start (look-away) and turn end (look-back) using an event-detection rule based on consecutive same-label samples, with sub-200 ms runs dropped as noise.
 4. **RQ2, role asymmetry.** Compute the percentage of valid samples spent on-robot during the *listening* and *speaking* roles, per participant.
 5. **Random-window baseline.** Re-run the RQ1 detector on 100 randomly placed two-second windows per participant to verify the turn-anchored numbers are not chance-level.
